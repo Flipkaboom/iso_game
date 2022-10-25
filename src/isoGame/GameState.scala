@@ -1,5 +1,5 @@
 package isoGame
 
-case class GameState(){
+class GameState(){
 
 }
