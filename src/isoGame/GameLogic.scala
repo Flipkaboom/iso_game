@@ -1,7 +1,5 @@
 package isoGame
 
-import isoGame.blocks.Block
-
 //TODO: consider screen based level instead of moving camera
 /*
         Camera:
@@ -26,5 +24,15 @@ import isoGame.blocks.Block
  */
 
 class GameLogic(){
-    val terrain = Array3[Block](16, 16, 16, blocks.Air)
+    val state: GameState = new GameState
+
+    var count = 0
+
+    def updateGame(): Unit = {
+
+    }
+}
+
+object GameLogic{
+    val chunkSize: Point3 = Point3(16, 16, 16)
 }

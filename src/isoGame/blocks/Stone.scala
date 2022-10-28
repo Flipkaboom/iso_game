@@ -1,7 +1,7 @@
 package isoGame.blocks
 
-object Dirt extends Block{
-    val name = "Dirt"
+object Stone extends Block{
+    val name = "Stone"
     val collision: Boolean = true
     val transparent: Boolean = false
     val visible: Boolean = true
