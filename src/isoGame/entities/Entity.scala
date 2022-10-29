@@ -21,7 +21,7 @@ abstract class Entity {
 
     final def update(terrain: Array3[Block]): Unit = {
         move(speed, terrain)
-        println("spz" + speed.z + " z" + pos.z)
+//        println("spz" + speed.z + " z" + pos.z)
         //        if(hasPhysics) applyGravity()
         frameActions(terrain)
     }
@@ -41,6 +41,14 @@ abstract class Entity {
 
     def leftBound(p: Point3Double): Point3Double = p - Point3Double(widthBlockScale / 2, -(widthBlockScale / 2), 0)
     def rightBound(p: Point3Double): Point3Double = p + Point3Double(widthBlockScale / 2, -(widthBlockScale / 2), 0)
+
+    def pointCollidesWithTerrain(p: Point3Double, terrain: Array3[Block]): Boolean = {
+        terrain(p.toPoint3).collision ||
+            p.x < 0 || p.y < 0 || p.z < 0 ||
+            p.x >= GameLogic.chunkSize.x ||
+            p.y >= GameLogic.chunkSize.y ||
+            p.z >= GameLogic.chunkSize.z
+    }
 
     def collidesWithTerrain(terrain: Array3[Block], p: Point3Double = pos): Boolean = {
         val p1: Point3Double = leftBound(p)
@@ -73,6 +81,8 @@ abstract class Entity {
     }
 
     def move(dif: Point3Double, terrain: Array3[Block]): Unit = {
+        if(speed.x.abs < 0.01 && speed.y.abs < 0.01 && speed.z.abs < 0.01) return
+
         val movedPos: Point3Double = pos + dif
         var finalPos: Point3Double = movedPos
 
@@ -83,23 +93,69 @@ abstract class Entity {
         val movedRightBound: Point3Double = rightBound(movedPos)
         val movedLeftBound: Point3Double = leftBound(movedPos)
 
-        //Moving straight up or down into a corner of a block
-        if (collisionX && collisionY) {
-            return
+        val touchingMargin: Double = 0.05
+        val touchingCorner: Boolean = (
+            (
+                collidesWithTerrain(terrain, movedPos + Point3Double(touchingMargin, touchingMargin, 0)) ||
+                collidesWithTerrain(terrain, movedPos + Point3Double(-touchingMargin, -touchingMargin, 0)) //||
+//                collidesWithTerrain(terrain, movedPos + Point3Double(0, touchingMargin, 0)) ||
+//                collidesWithTerrain(terrain, movedPos + Point3Double(0, -touchingMargin, 0))
+            )
+                &&
+            (
+                !pointCollidesWithTerrain(movedLeftBound + Point3Double(touchingMargin, touchingMargin, 0), terrain) &&
+                !pointCollidesWithTerrain(movedLeftBound + Point3Double(-touchingMargin, -touchingMargin, 0), terrain) &&
+//                !pointCollidesWithTerrain(movedLeftBound + Point3Double(0, touchingMargin, 0), terrain) &&
+//                !pointCollidesWithTerrain(movedLeftBound + Point3Double(0, -touchingMargin, 0), terrain) &&
+                !pointCollidesWithTerrain(movedRightBound + Point3Double(touchingMargin, touchingMargin, 0), terrain) &&
+                !pointCollidesWithTerrain(movedRightBound + Point3Double(-touchingMargin, -touchingMargin, 0), terrain) //&&
+//                !pointCollidesWithTerrain(movedRightBound + Point3Double(0, touchingMargin, 0), terrain) &&
+//                !pointCollidesWithTerrain(movedRightBound + Point3Double(0, -touchingMargin, 0), terrain)
+            )
+        )
+        if(touchingCorner) {
+            println("corner")
+            val horizontalSpeed: Double = (speed.x - speed.y) / 2
+            val verticalSpeed: Double = (speed.x + speed.y) / 2
+//            val verticalMargin = Point3Double(x = 0.01, y = 0.01)
+            val verticalMargin = Point3Double(0)
+
+            if(verticalSpeed > 0){
+                pos = pos + Point3Double(horizontalSpeed, -horizontalSpeed, 0) - verticalMargin
+                return
+            }
+            else if(verticalSpeed < 0){
+                pos = pos + Point3Double(horizontalSpeed, -horizontalSpeed, 0) + verticalMargin
+                return
+            }
+
         }
+
+//        //Moving into a corner between two blocks
+//        if (collisionX && collisionY) {
+//            return
+//        }
 
         //Collision with anything
         if((collisionX || collisionY) && collisionCombined){
             if(collisionX) {
-                if (movedPos.x < pos.x) finalPos = finalPos.copy(x = pos.x.floor + (widthBlockScale / 2))
+                if (movedPos.x < pos.x) {
+                    finalPos = finalPos.copy(x = pos.x.floor + (widthBlockScale / 2))
+                    println("x< " + pos.x + "," + pos.y + "new "+movedPos.x+","+movedPos.y)
+                }
                 else if (movedPos.x > pos.x) {
                     finalPos = finalPos.copy(x = (movedRightBound.x.floor - 0.001) - (widthBlockScale / 2))
+                    println("x> " + pos.x + "," + pos.y + "new "+movedPos.x+","+movedPos.y)
                 }
             }
             if(collisionY) {
-                if (movedPos.y < pos.y) finalPos = finalPos.copy(y = pos.y.floor + (widthBlockScale / 2))
+                if (movedPos.y < pos.y) {
+                    finalPos = finalPos.copy(y = pos.y.floor + (widthBlockScale / 2))
+                    println("y< " + pos.x + "," + pos.y + "new "+movedPos.x+","+movedPos.y)
+                }
                 else if (movedPos.y > pos.y) {
                     finalPos = finalPos.copy(y = (movedLeftBound.y.floor - 0.001) - (widthBlockScale / 2))
+                    println("y> " + pos.x + "," + pos.y + "new "+movedPos.x+","+movedPos.y)
                 }
             }
         }
