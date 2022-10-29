@@ -89,6 +89,44 @@ abstract class Entity {
       * @return true when corner intersection was found, otherwise false
       */
     def handleVerticalCorner(movedPos: Point3Double, terrain: Array3[Block]): Boolean = {
+        val movedRightBound: Point3Double = rightBound(movedPos)
+        val movedLeftBound: Point3Double = leftBound(movedPos)
+
+        val horizontalMargin = Point3Double(x = 0.2, y = -0.2)
+        val verticalMargin = Point3Double(x = 0.01, y = 0.01)
+
+        val verticalSpeed: Double = (speed.x + speed.y) / 2
+
+        val touchingCornerUp: Boolean = {
+            verticalSpeed < 0 &&
+            collidesWithTerrain(terrain, movedPos - verticalMargin) && //entity collides when moved up slightly
+            (
+                //Left and right bound moved up and outward don't collide
+                !pointCollidesWithTerrain(movedLeftBound - verticalMargin - horizontalMargin, terrain) &&
+                !pointCollidesWithTerrain(movedRightBound - verticalMargin + horizontalMargin, terrain)
+            )
+        }
+
+        val touchingCornerDown: Boolean = {
+            verticalSpeed > 0 &&
+            collidesWithTerrain(terrain, movedPos + verticalMargin) && //entity collides when moved down slightly
+            (
+                //Left and right bound moved down and outward don't collide
+                !pointCollidesWithTerrain(movedLeftBound + verticalMargin - horizontalMargin, terrain) &&
+                !pointCollidesWithTerrain(movedRightBound + verticalMargin + horizontalMargin, terrain)
+            )
+        }
+
+        val horizontalSpeed: Double = (speed.x - speed.y) / 2
+        if (touchingCornerUp) {
+            pos = pos + Point3Double(horizontalSpeed, -horizontalSpeed, 0)
+            return true
+        }
+        else if (touchingCornerDown) {
+            pos = pos + Point3Double(horizontalSpeed, -horizontalSpeed, 0)
+            return true
+        }
+
         false
     }
 
@@ -98,71 +136,47 @@ abstract class Entity {
         val movedPos: Point3Double = pos + dif
         var finalPos: Point3Double = movedPos
 
-        val collisionX: Boolean = collidesWithTerrain(terrain, pos.copy(x = movedPos.x))
-        val collisionY: Boolean = collidesWithTerrain(terrain, pos.copy(y = movedPos.y))
-        val collisionCombined: Boolean = collidesWithTerrain(terrain, pos.copy(x = movedPos.x, y = movedPos.y))
+        //Check for vertical corners, if they were handled by the function nothing else needs to be done
+        if(handleVerticalCorner(movedPos, terrain)) return
+
+        val collisionNewPos: Boolean = collidesWithTerrain(terrain, movedPos)
+        //move position valid
+        if(!collisionNewPos) {
+            pos = movedPos
+            return
+        }
+
+        val collisionX: Boolean = collidesWithTerrain(terrain, pos.copy(x = movedPos.x, z = movedPos.z))
+        val collisionY: Boolean = collidesWithTerrain(terrain, pos.copy(y = movedPos.y, z = movedPos.z))
 
         val movedRightBound: Point3Double = rightBound(movedPos)
         val movedLeftBound: Point3Double = leftBound(movedPos)
 
-        val horizontalMargin = Point3Double(x = 0.2, y = -0.2)
-        val verticalMargin = Point3Double(x = 0.01, y = 0.01)
-        val verticalSpeed: Double = (speed.x + speed.y) / 2
-        val touchingCornerUp: Boolean = {
-            verticalSpeed < 0 &&
-            collidesWithTerrain(terrain, movedPos - verticalMargin) &&
-            (
-                !pointCollidesWithTerrain(movedLeftBound - verticalMargin - horizontalMargin, terrain) &&
-                !pointCollidesWithTerrain(movedRightBound - verticalMargin + horizontalMargin, terrain)
-            )
-        }
-
-        val touchingCornerDown: Boolean = {
-            verticalSpeed > 0 &&
-            collidesWithTerrain(terrain, movedPos + verticalMargin) &&
-            (
-                !pointCollidesWithTerrain(movedLeftBound + verticalMargin - horizontalMargin, terrain) &&
-                !pointCollidesWithTerrain(movedRightBound + verticalMargin + horizontalMargin, terrain)
-            )
-        }
-
-        val horizontalSpeed: Double = (speed.x - speed.y) / 2
-        if(touchingCornerUp){
-            println("corner")
-            pos = pos + Point3Double(horizontalSpeed, -horizontalSpeed, 0)
-            return
-        }
-        else if(touchingCornerDown){
-            println("corner")
-            pos = pos + Point3Double(horizontalSpeed, -horizontalSpeed, 0)
-            return
-        }
-
-        //Collision with anything
-        if((collisionX || collisionY) && collisionCombined){
+        //Collision with wall
+        if((collisionX || collisionY) && collisionNewPos){
             if(collisionX) {
                 if (movedPos.x < pos.x) {
                     finalPos = finalPos.copy(x = pos.x.floor + (widthBlockScale / 2))
-                    println("x< " + pos.x + "," + pos.y + "new "+movedPos.x+","+movedPos.y)
+//                    println("x< " + pos.x + "," + pos.y + "new "+movedPos.x+","+movedPos.y)
                 }
                 else if (movedPos.x > pos.x) {
                     finalPos = finalPos.copy(x = (movedRightBound.x.floor - 0.001) - (widthBlockScale / 2))
-                    println("x> " + pos.x + "," + pos.y + "new "+movedPos.x+","+movedPos.y)
+//                    println("x> " + pos.x + "," + pos.y + "new "+movedPos.x+","+movedPos.y)
                 }
             }
             if(collisionY) {
                 if (movedPos.y < pos.y) {
                     finalPos = finalPos.copy(y = pos.y.floor + (widthBlockScale / 2))
-                    println("y< " + pos.x + "," + pos.y + "new "+movedPos.x+","+movedPos.y)
+//                    println("y< " + pos.x + "," + pos.y + "new "+movedPos.x+","+movedPos.y)
                 }
                 else if (movedPos.y > pos.y) {
                     finalPos = finalPos.copy(y = (movedLeftBound.y.floor - 0.001) - (widthBlockScale / 2))
-                    println("y> " + pos.x + "," + pos.y + "new "+movedPos.x+","+movedPos.y)
+//                    println("y> " + pos.x + "," + pos.y + "new "+movedPos.x+","+movedPos.y)
                 }
             }
         }
         //Collision with corner from the side
-        else if(collisionCombined){
+        else if(collisionNewPos){
             if (movedPos.x < pos.x) finalPos = finalPos.copy(x = pos.x.floor + (widthBlockScale / 2))
             else if (movedPos.x > pos.x) {
                 finalPos = finalPos.copy(x = (movedRightBound.x.floor - 0.001) - (widthBlockScale / 2))
