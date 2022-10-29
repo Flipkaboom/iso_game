@@ -19,5 +19,5 @@ class Player(var pos: Point3Double) extends Entity {
 }
 
 object Player{
-    val walkingSpeed = 0.1
+    val walkingSpeed = 0.05
 }

@@ -1,5 +1,6 @@
 package isoGame.entities
 
+import com.jogamp.newt.event.MouseEvent.PointerType
 import isoGame.blocks.Block
 import isoGame.entities.Entity._
 import isoGame.{Array3, GameLogic, Point3, Point3Double, Renderer}
@@ -20,8 +21,8 @@ abstract class Entity {
 
     final def update(terrain: Array3[Block]): Unit = {
         move(speed, terrain)
-//        println("spz" + speed.z + " z" + pos.z)
-//        if(hasPhysics) applyGravity()
+        println("spz" + speed.z + " z" + pos.z)
+        //        if(hasPhysics) applyGravity()
         frameActions(terrain)
     }
 
@@ -41,14 +42,6 @@ abstract class Entity {
     def leftBound(p: Point3Double): Point3Double = p - Point3Double(widthBlockScale / 2, -(widthBlockScale / 2), 0)
     def rightBound(p: Point3Double): Point3Double = p + Point3Double(widthBlockScale / 2, -(widthBlockScale / 2), 0)
 
-    def pointCollidesWithTerrain(p: Point3Double, terrain: Array3[Block]): Boolean = {
-        terrain(p.toPoint3).collision ||
-            p.x < 0 || p.y < 0 || p.z < 0 ||
-            p.x >= GameLogic.chunkSize.x ||
-            p.y >= GameLogic.chunkSize.y ||
-            p.z >= GameLogic.chunkSize.z
-    }
-
     def collidesWithTerrain(terrain: Array3[Block], p: Point3Double = pos): Boolean = {
         val p1: Point3Double = leftBound(p)
         val p2: Point3Double = rightBound(p)
@@ -64,9 +57,8 @@ abstract class Entity {
             if (currPoint.x >= GameLogic.chunkSize.x ||
                 currPoint.y >= GameLogic.chunkSize.y ||
                 terrain(currPoint).collision){
-                    return true
+                return true
             }
-
             //Depending on if current row is even snakes up or down
             if (currPoint.diagonalRow % 2 == startRowEven) currPoint = currPoint - Point3(0, 1, 0)
             else currPoint = currPoint + Point3(1, 0, 0)
@@ -75,7 +67,7 @@ abstract class Entity {
         if (currPoint.x >= GameLogic.chunkSize.x ||
             currPoint.y >= GameLogic.chunkSize.y ||
             terrain(currPoint).collision) {
-                return true
+            return true
         }
         else false
     }
@@ -92,21 +84,9 @@ abstract class Entity {
         val movedLeftBound: Point3Double = leftBound(movedPos)
 
         //Moving straight up or down into a corner of a block
-        if ((collisionX && collisionY) &&
-            collisionCombined //&&
-//            !pointCollidesWithTerrain(movedLeftBound, terrain) &&
-//            !pointCollidesWithTerrain(movedRightBound, terrain)
-        ) {
-//            finalPos = pos
-            println("a" + pos.x + "," + pos.y)
+        if (collisionX && collisionY) {
             return
         }
-
-        //TODO: if z going down, land on block and set speed to 0
-        //TODO: if z going up set top of hitbox to bottom of block and speed to 0
-        //TODO: some way of knowing if youre touching the ground
-        //TODO:     Set variable in here and jumping (doesn't work when walking off edge)
-        //TODO:     Check if pos with z - very small number collides with terrain <<<<<<
 
         //Collision with anything
         if((collisionX || collisionY) && collisionCombined){
@@ -117,9 +97,7 @@ abstract class Entity {
                 }
             }
             if(collisionY) {
-                if (movedPos.y < pos.y) {
-                    finalPos = finalPos.copy(y = pos.y.floor + (widthBlockScale / 2))
-                }
+                if (movedPos.y < pos.y) finalPos = finalPos.copy(y = pos.y.floor + (widthBlockScale / 2))
                 else if (movedPos.y > pos.y) {
                     finalPos = finalPos.copy(y = (movedLeftBound.y.floor - 0.001) - (widthBlockScale / 2))
                 }
@@ -140,6 +118,6 @@ abstract class Entity {
 }
 
 object Entity{
-    val maxFallingSpeed = 1
-    val gravityAcceleration = 0.2
+    val maxFallingSpeed = 0.1
+    val gravityAcceleration = 0.01
 }

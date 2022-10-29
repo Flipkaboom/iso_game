@@ -36,20 +36,22 @@ class GameLogic(){
 
     def keyPressed(key: String): Unit = {
         key match {
-            case "UP" => state.player.accelerate(Point3Double(-Player.walkingSpeed, -Player.walkingSpeed, 0))
+            case "UP" => state.player.accelerate(Point3Double(-2*Player.walkingSpeed, -2*Player.walkingSpeed, 0))
             case "LEFT" => state.player.accelerate(Point3Double(-Player.walkingSpeed, Player.walkingSpeed, 0))
-            case "DOWN" => state.player.accelerate(Point3Double(Player.walkingSpeed, Player.walkingSpeed, 0))
+            case "DOWN" => state.player.accelerate(Point3Double(2*Player.walkingSpeed, 2*Player.walkingSpeed, 0))
             case "RIGHT" => state.player.accelerate(Point3Double(Player.walkingSpeed, -Player.walkingSpeed, 0))
-            case "JUMP" => state.player.speed = state.player.speed.copy(z = 1)
+            case "JUMP" =>
+                state.player.pos = Point3Double(10, 8, 11)
+                state.player.speed = state.player.speed.copy(z = 0.8)
             case _ =>
         }
     }
 
     def keyReleased(key: String): Unit = {
         key match {
-            case "UP" => state.player.accelerate(Point3Double(Player.walkingSpeed, Player.walkingSpeed, 0))
+            case "UP" => state.player.accelerate(Point3Double(2*Player.walkingSpeed, 2*Player.walkingSpeed, 0))
             case "LEFT" => state.player.accelerate(Point3Double(Player.walkingSpeed, -Player.walkingSpeed, 0))
-            case "DOWN" => state.player.accelerate(Point3Double(-Player.walkingSpeed, -Player.walkingSpeed, 0))
+            case "DOWN" => state.player.accelerate(Point3Double(-2*Player.walkingSpeed, -2*Player.walkingSpeed, 0))
             case "RIGHT" => state.player.accelerate(Point3Double(-Player.walkingSpeed, Player.walkingSpeed, 0))
             case "JUMP" =>
             case _ =>
