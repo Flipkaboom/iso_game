@@ -1,5 +1,7 @@
 package isoGame
 
+import scala.collection.mutable
+
 //TODO: consider screen based level instead of moving camera
 /*
         Camera:
@@ -26,10 +28,17 @@ package isoGame
 class GameLogic(){
     val state: GameState = new GameState
 
-    var count = 0
+    val heldControls: mutable.Set[String] = mutable.Set()
 
     def updateGame(): Unit = {
+        handlePlayerControls()
+    }
 
+    def handlePlayerControls(): Unit = {
+        if(heldControls.contains("LEFT")) state.player.move(Point3Double(-0.1, 0.1, 0), state.terrain)
+        if(heldControls.contains("RIGHT")) state.player.move(Point3Double(0.1, -0.1, 0), state.terrain)
+        if(heldControls.contains("UP")) state.player.move(Point3Double(-0.1, -0.1, 0), state.terrain)
+        if(heldControls.contains("DOWN")) state.player.move(Point3Double(0.1, 0.1, 0), state.terrain)
     }
 }
 
