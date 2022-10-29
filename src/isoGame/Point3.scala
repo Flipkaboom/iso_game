@@ -1,20 +1,24 @@
 package isoGame
 
 case class Point3(x: Int, y: Int, z: Int){
-//    def +(rhs: Point3): Point3 = {
-//        Point3(x + rhs.x, y + rhs.y, z + rhs.z)
-//    }
-//    
-//    def -(rhs: Point3): Point3 = {
-//        Point3(x - rhs.x, y - rhs.y, z - rhs.z)
-//    }
-    
+    def +(rhs: Point3): Point3 = {
+        Point3(x + rhs.x, y + rhs.y, z + rhs.z)
+    }
+
+    def -(rhs: Point3): Point3 = {
+        Point3(x - rhs.x, y - rhs.y, z - rhs.z)
+    }
+
     def +(rhs: Int): Point3 = {
         Point3(x + rhs, y + rhs, z + rhs)
     }
 
     def -(rhs: Int): Point3 = {
         Point3(x - rhs, y - rhs, z - rhs)
+    }
+
+    def toPoint3Double: Point3Double = {
+        Point3Double(x, y, z)
     }
 
     //TODO: make more efficient if needed? Iterator?
@@ -30,7 +34,7 @@ case class Point3(x: Int, y: Int, z: Int){
         Point3(f(x, other.x), f(y, other.y), f(z, other.z))
     }
 
-    def diagonalRow(): Int = {
+    def diagonalRow: Int = {
         x + y
     }
 }
