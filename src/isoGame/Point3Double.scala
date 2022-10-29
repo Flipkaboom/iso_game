@@ -1,6 +1,6 @@
 package isoGame
 
-case class Point3Double(x: Double, y: Double, z: Double){
+case class Point3Double(x: Double = 0, y: Double = 0, z: Double = 0){
     def +(rhs: Point3Double): Point3Double = {
         Point3Double(x + rhs.x, y + rhs.y, z + rhs.z)
     }

@@ -1,6 +1,5 @@
 package isoGame.entities
 
-import com.jogamp.newt.event.MouseEvent.PointerType
 import isoGame.blocks.Block
 import isoGame.entities.Entity._
 import isoGame.{Array3, GameLogic, Point3, Point3Double, Renderer}
@@ -42,30 +41,30 @@ abstract class Entity {
     def leftBound(p: Point3Double): Point3Double = p - Point3Double(widthBlockScale / 2, -(widthBlockScale / 2), 0)
     def rightBound(p: Point3Double): Point3Double = p + Point3Double(widthBlockScale / 2, -(widthBlockScale / 2), 0)
 
+    def pointCollidesWithTerrain(p: Point3Double, terrain: Array3[Block]): Boolean = {
+        terrain(p.toPoint3).collision ||
+            p.x < 0 || p.y < 0 || p.z < 0 ||
+            p.x >= GameLogic.chunkSize.x ||
+            p.y >= GameLogic.chunkSize.y ||
+            p.z >= GameLogic.chunkSize.z
+    }
+
     def collidesWithTerrain(terrain: Array3[Block], p: Point3Double = pos): Boolean = {
         val p1: Point3Double = leftBound(p)
         val p2: Point3Double = rightBound(p)
 
         //flooring -0.x goes to 0 so this is checked before flooring
-        if(p1.x < 0 || p1.y < 0 || p2.x < 0 || p2.y < 0 || p.z < 0) return true
+        if(p1.x < 0 || p1.y < 0 || p2.x < 0 || p2.y < 0) return true
 
         var currPoint: Point3 = p1.toPoint3
-
-        val zMin: Int = p.z.toInt
-        val zMax: Int = (p.z + heightBlockScale).toInt
-
-        if(zMin < 0 || zMax >= GameLogic.chunkSize.z) return true
 
         //used to decide whether to snake up-down-up or down-up-down
         val startRowEven = p1.diagonalRow.toInt % 2
         while (currPoint != p2.toPoint3) {
             if (currPoint.x >= GameLogic.chunkSize.x ||
-                currPoint.y >= GameLogic.chunkSize.y ){
+                currPoint.y >= GameLogic.chunkSize.y ||
+                terrain(currPoint).collision){
                     return true
-            }
-            //Check vertical columns
-            for(z <- zMin to zMax){
-                if(terrain(currPoint.copy(z = z)).collision) return true
             }
 
             //Depending on if current row is even snakes up or down
@@ -74,15 +73,11 @@ abstract class Entity {
         }
 
         if (currPoint.x >= GameLogic.chunkSize.x ||
-            currPoint.y >= GameLogic.chunkSize.y) {
+            currPoint.y >= GameLogic.chunkSize.y ||
+            terrain(currPoint).collision) {
                 return true
         }
-        //Check vertical column
-        for (z <- zMin to zMax) {
-            if (terrain(currPoint.copy(z = z)).collision) return true
-        }
-
-        false
+        else false
     }
 
     def move(dif: Point3Double, terrain: Array3[Block]): Unit = {
@@ -97,7 +92,13 @@ abstract class Entity {
         val movedLeftBound: Point3Double = leftBound(movedPos)
 
         //Moving straight up or down into a corner of a block
-        if (collisionX && collisionY) {
+        if ((collisionX && collisionY) &&
+            collisionCombined //&&
+//            !pointCollidesWithTerrain(movedLeftBound, terrain) &&
+//            !pointCollidesWithTerrain(movedRightBound, terrain)
+        ) {
+//            finalPos = pos
+            println("a" + pos.x + "," + pos.y)
             return
         }
 
@@ -116,7 +117,9 @@ abstract class Entity {
                 }
             }
             if(collisionY) {
-                if (movedPos.y < pos.y) finalPos = finalPos.copy(y = pos.y.floor + (widthBlockScale / 2))
+                if (movedPos.y < pos.y) {
+                    finalPos = finalPos.copy(y = pos.y.floor + (widthBlockScale / 2))
+                }
                 else if (movedPos.y > pos.y) {
                     finalPos = finalPos.copy(y = (movedLeftBound.y.floor - 0.001) - (widthBlockScale / 2))
                 }
