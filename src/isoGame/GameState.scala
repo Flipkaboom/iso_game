@@ -27,4 +27,8 @@ class GameState(){
     def spawnEntity(e: Entity): Unit = {
         entityArray.append(e)
     }
+
+    def updateEntities(): Unit = {
+        for(e <- entityArray) e.update(terrain)
+    }
 }

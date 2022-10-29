@@ -117,7 +117,7 @@ class Renderer extends BaseEngine{
         for (diagRow <- 0 until GameLogic.chunkSize.x){
             for(z <- 0 until GameLogic.chunkSize.z){
                 for(e <- entityArray){
-                    if((e.pos.diagonalRow).toInt == diagRow && e.pos.z == z){
+                    if((e.pos.diagonalRow).toInt == diagRow && e.pos.z.toInt == z){
                         drawEntity(e)
                     }
                 }
@@ -131,7 +131,7 @@ class Renderer extends BaseEngine{
         for (diagRow <- GameLogic.chunkSize.x to 0 by -1){
             for (z <- 0 until GameLogic.chunkSize.z){
                 for (e <- entityArray) {
-                    if (31 - (e.pos.diagonalRow).toInt == diagRow && e.pos.z == z) {
+                    if (31 - (e.pos.diagonalRow).toInt == diagRow && e.pos.z.toInt == z) {
                         drawEntity(e)
                     }
                 }

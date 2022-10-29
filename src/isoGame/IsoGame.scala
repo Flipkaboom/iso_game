@@ -4,10 +4,13 @@ import processing.core.PApplet
 import processing.event.KeyEvent
 
 import java.awt.event.KeyEvent._
+import scala.collection.mutable
 
 
 class IsoGame extends Renderer{
     val gameInstance: GameLogic = new GameLogic
+
+    val heldKeys: mutable.Set[Int] = mutable.Set()
 
     val keyBinds: Map[Int, String] = Map(
         (VK_W, "UP"),
@@ -23,14 +26,18 @@ class IsoGame extends Renderer{
     }
 
     override def keyPressed(event: KeyEvent): Unit = {
-        if(keyBinds.contains(event.getKeyCode)) {
-            gameInstance.heldControls.addOne(keyBinds(event.getKeyCode))
+        val keyCode = event.getKeyCode
+        if(keyBinds.contains(keyCode) && !heldKeys.contains(keyCode)) {
+            heldKeys.addOne(keyCode)
+            gameInstance.keyPressed(keyBinds(keyCode))
         }
     }
 
     override def keyReleased(event: KeyEvent): Unit = {
-        if (keyBinds.contains(event.getKeyCode)) {
-            gameInstance.heldControls.remove(keyBinds(event.getKeyCode))
+        val keyCode = event.getKeyCode
+        if (keyBinds.contains(keyCode)) {
+            heldKeys.remove(keyCode)
+            gameInstance.keyReleased(keyBinds(keyCode))
         }
     }
 }

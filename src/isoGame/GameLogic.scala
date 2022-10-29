@@ -1,5 +1,7 @@
 package isoGame
 
+import isoGame.entities.Player
+
 import scala.collection.mutable
 
 //TODO: consider screen based level instead of moving camera
@@ -28,18 +30,32 @@ import scala.collection.mutable
 class GameLogic(){
     val state: GameState = new GameState
 
-    val heldControls: mutable.Set[String] = mutable.Set()
-
     def updateGame(): Unit = {
-        handlePlayerControls()
+        state.updateEntities()
     }
 
-    def handlePlayerControls(): Unit = {
-        if(heldControls.contains("LEFT")) state.player.move(Point3Double(-0.1, 0.1, 0), state.terrain)
-        if(heldControls.contains("RIGHT")) state.player.move(Point3Double(0.1, -0.1, 0), state.terrain)
-        if(heldControls.contains("UP")) state.player.move(Point3Double(-0.1, -0.1, 0), state.terrain)
-        if(heldControls.contains("DOWN")) state.player.move(Point3Double(0.1, 0.1, 0), state.terrain)
+    def keyPressed(key: String): Unit = {
+        key match {
+            case "UP" => state.player.accelerate(Point3Double(-Player.walkingSpeed, -Player.walkingSpeed, 0))
+            case "LEFT" => state.player.accelerate(Point3Double(-Player.walkingSpeed, Player.walkingSpeed, 0))
+            case "DOWN" => state.player.accelerate(Point3Double(Player.walkingSpeed, Player.walkingSpeed, 0))
+            case "RIGHT" => state.player.accelerate(Point3Double(Player.walkingSpeed, -Player.walkingSpeed, 0))
+            case "JUMP" => state.player.speed = state.player.speed.copy(z = 1)
+            case _ =>
+        }
     }
+
+    def keyReleased(key: String): Unit = {
+        key match {
+            case "UP" => state.player.accelerate(Point3Double(Player.walkingSpeed, Player.walkingSpeed, 0))
+            case "LEFT" => state.player.accelerate(Point3Double(Player.walkingSpeed, -Player.walkingSpeed, 0))
+            case "DOWN" => state.player.accelerate(Point3Double(-Player.walkingSpeed, -Player.walkingSpeed, 0))
+            case "RIGHT" => state.player.accelerate(Point3Double(-Player.walkingSpeed, Player.walkingSpeed, 0))
+            case "JUMP" =>
+            case _ =>
+        }
+    }
+
 }
 
 object GameLogic{
