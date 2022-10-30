@@ -4,17 +4,15 @@ import isoGame.GameState
 import isoGame.Renderer.textures
 import isoGame.blocks.Block
 import isoGame.entities.Entity
-import processing.core.PImage
+import processing.core.{PApplet, PImage}
 
 import java.io.File
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-//TODO: abstract because it won't work on it's own?
-class Renderer extends BaseEngine{
+class Renderer extends PApplet{
     var renderingScale: Float = 1
 
-    //TODO: don't need x and y just make it have a width or radius maybe??
     def terrainWidth: Float = (GameState.chunkSize.x max GameState.chunkSize.y) * Block.width
     def terrainHeight: Float = {
         ((GameState.chunkSize.x max GameState.chunkSize.y) * (Block.height / 2)) +
@@ -47,7 +45,7 @@ class Renderer extends BaseEngine{
 
     }
 
-    def drawFrame(state: GameState): Unit = {
+    def drawFrame(): Unit = {
         updateRenderingScale()
 
         background(77, 93, 114)
@@ -62,7 +60,7 @@ class Renderer extends BaseEngine{
         //Multiplication of coordinates with renderingScale should always yield an integer number without
         //having to round otherwise blocks will not line up
         val smallestFactor = (Block.height / 2) min (Block.width / 4)
-        renderingScale = ((scale * smallestFactor).floor) / smallestFactor
+        renderingScale = (scale * smallestFactor).floor / smallestFactor
     }
 
     def screenPosFromCoords(p: Point3Double): PointDouble = {
@@ -97,8 +95,6 @@ class Renderer extends BaseEngine{
         image(img, x, y, drawWidth, drawHeight)
     }
 
-    //TODO: is height hard to see? Change in brightness with height?
-    //TODO: don't draw background blocks (if needed for performance)
     def drawBlock(b: Block, p: Point3): Unit = {
         val screenpos = screenPosFromCoords(p.toPoint3Double)
         drawTexture(b.texture, screenpos)
@@ -122,7 +118,7 @@ class Renderer extends BaseEngine{
         for (diagRow <- 0 until GameState.chunkSize.x){
             for(z <- 0 until GameState.chunkSize.z){
                 for(e <- entityArray){
-                    if((e.pos.diagonalRow).toInt == diagRow && e.pos.z.toInt == z){
+                    if(e.pos.diagonalRow.toInt == diagRow && e.pos.z.toInt == z){
                         drawEntity(e)
                     }
                 }
@@ -136,7 +132,7 @@ class Renderer extends BaseEngine{
         for (diagRow <- GameState.chunkSize.x to 0 by -1){
             for (z <- 0 until GameState.chunkSize.z){
                 for (e <- entityArray) {
-                    if (((GameState.chunkSize.x * 2) - 1) - (e.pos.diagonalRow).toInt == diagRow && e.pos.z.toInt == z) {
+                    if (((GameState.chunkSize.x * 2) - 1) - e.pos.diagonalRow.toInt == diagRow && e.pos.z.toInt == z) {
                         drawEntity(e)
                     }
                 }

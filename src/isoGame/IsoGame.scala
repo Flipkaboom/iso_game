@@ -31,7 +31,7 @@ class IsoGame extends Renderer{
 
     override def draw(): Unit = {
         gameInstance.updateGame()
-        drawFrame(gameInstance.state)
+        drawFrame()
     }
 
     override def keyPressed(event: KeyEvent): Unit = {
@@ -58,7 +58,8 @@ object IsoGame{
     var editorSize: Point3 = Point3(16, 16, 32)
 
     def main(args: Array[String]): Unit = {
-        startingLevel = args(0)
+        if(args.length < 1) startingLevel = "FirstRoom"
+        else startingLevel = args(0)
         PApplet.main("isoGame.IsoGame")
     }
 }
