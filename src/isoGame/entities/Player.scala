@@ -22,7 +22,7 @@ class Player(var pos: Point3Double) extends Entity {
         else baseTexture
     }
 
-    var hat: PlayerHat = new PlayerHat(pos + Point3Double(-0.05, 0.05, heightBlockScale / 2.3))
+    val hat: PlayerHat = new PlayerHat(pos + Point3Double(-0.05, 0.05, heightBlockScale / 2.3))
 
     override def onLevelStart(): Unit = GameState.spawnEntity(hat)
 

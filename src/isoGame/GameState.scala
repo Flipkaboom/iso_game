@@ -10,10 +10,10 @@ import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 class GameState(){
-    var player: Player = null
+    var player: Player = _
     var levelName: String = ""
 
-    var savedLevels: mutable.Set[String] = mutable.Set()
+    val savedLevels: mutable.Set[String] = mutable.Set()
 
     def checkTransport(): Unit = {
         if(!activateTransport) return

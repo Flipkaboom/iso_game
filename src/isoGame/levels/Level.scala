@@ -39,7 +39,7 @@ abstract class Level {
 }
 
 object Level{
-    def byName(name: String) = {
+    def byName(name: String): Level = {
         name match {
             case "Testing" => new Testing
             case "New" => new New
@@ -49,6 +49,7 @@ object Level{
             case "Wires1" => new Wires1
             case "MultiBox" => new MultiBox
             case "SimpleDoor" => new SimpleDoor
+            case "Frogmap" => new Frogmap
         }
     }
 }
