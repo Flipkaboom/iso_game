@@ -21,6 +21,8 @@ class GameState(){
     terrain(Point3(15,0,10)) = blocks.Stone
     terrain(Point3(15,15,10)) = blocks.Stone
     terrain.fillRect(Point3(3,12,11), Point3(8,8,13), blocks.Dirt)
+    terrain.fillRect(Point3(3, 3, 10), Point3(6, 3, 10), blocks.Stone)
+    terrain.fillRect(Point3(3, 3, 12), Point3(6, 3, 12), blocks.Stone)
 
     spawnEntity(player)
 

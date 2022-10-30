@@ -36,38 +36,50 @@ abstract class Entity {
         }
     }
 
+    /** @return width of the entity converted to block units (1 block length = 1 unit) */
     def widthBlockScale: Double = width.toDouble / Block.width
+    /** @return height of the entity converted to block units (1 block height = 1 unit) */
     def heightBlockScale: Double = height.toDouble / Block.height
 
+    /** @return the leftmost point of the collision plane */
     def leftBound(p: Point3Double): Point3Double = p - Point3Double(widthBlockScale / 2, -(widthBlockScale / 2), 0)
+    /** @return the rightmost point of the collision plane */
     def rightBound(p: Point3Double): Point3Double = p + Point3Double(widthBlockScale / 2, -(widthBlockScale / 2), 0)
 
-    def pointCollidesWithTerrain(p: Point3Double, terrain: Array3[Block]): Boolean = {
-        terrain(p.toPoint3).collision ||
-            p.x < 0 || p.y < 0 || p.z < 0 ||
-            p.x >= GameLogic.chunkSize.x ||
-            p.y >= GameLogic.chunkSize.y ||
-            p.z >= GameLogic.chunkSize.z
+    def pointCollides(p: Point3Double, terrain: Array3[Block]): Boolean = {
+        p.x < 0 || p.y < 0 || p.z < 0 ||
+        p.x >= GameLogic.chunkSize.x ||
+        p.y >= GameLogic.chunkSize.y ||
+        p.z >= GameLogic.chunkSize.z ||
+        terrain(p.toPoint3).collision
+    }
+
+    /** checks if the blocks from the given point up to the given point + entity height
+      * collides with given terrain */
+    def pointWithHeightCollides(p: Point3Double, terrain: Array3[Block]): Boolean = {
+        val minZ = p.z.toInt
+        val maxZ = (p.z + heightBlockScale).toInt
+        for(z <- minZ to maxZ){
+            if(pointCollides(p.copy(z = z), terrain)) return true
+        }
+        false
     }
 
     /** Checks if this entity collides with the given terrain
-      * @param p optional point to check entity collision in a different position
-      */
-    def collidesWithTerrain(terrain: Array3[Block], p: Point3Double = pos): Boolean = {
+      * @param p optional point to check entity collision in a different position */
+    def collides(terrain: Array3[Block], p: Point3Double = pos): Boolean = {
         val p1: Point3Double = leftBound(p)
         val p2: Point3Double = rightBound(p)
 
         //flooring -0.x goes to 0 so this is checked before flooring
-        if(p1.x < 0 || p1.y < 0 || p2.x < 0 || p2.y < 0) return true
+        if(pointWithHeightCollides(p1, terrain) || pointWithHeightCollides(p2, terrain)) return true
 
         var currPoint: Point3 = p1.toPoint3
 
         //used to decide whether to snake up-down-up or down-up-down
         val startRowEven = p1.diagonalRow.toInt % 2
         while (currPoint != p2.toPoint3) {
-            if (currPoint.x >= GameLogic.chunkSize.x ||
-                currPoint.y >= GameLogic.chunkSize.y ||
-                terrain(currPoint).collision){
+            if (pointWithHeightCollides(currPoint.toPoint3Double, terrain)){
                 return true
             }
             //Depending on if current row is even snakes up or down
@@ -75,9 +87,7 @@ abstract class Entity {
             else currPoint = currPoint + Point3(1, 0, 0)
         }
 
-        if (currPoint.x >= GameLogic.chunkSize.x ||
-            currPoint.y >= GameLogic.chunkSize.y ||
-            terrain(currPoint).collision) {
+        if (pointWithHeightCollides(currPoint.toPoint3Double, terrain)) {
             return true
         }
         else false
@@ -86,43 +96,38 @@ abstract class Entity {
     /** Checks if moving to new position would intersect with a vertical corner and if so
       * handles the appropriate movement
       * @param movedPos the position the entity is moving to
-      * @return true when corner intersection was found, otherwise false
-      */
-    def handleVerticalCorner(movedPos: Point3Double, terrain: Array3[Block]): Boolean = {
-        val movedRightBound: Point3Double = rightBound(movedPos)
-        val movedLeftBound: Point3Double = leftBound(movedPos)
-
-        val horizontalMargin = Point3Double(x = 0.2, y = -0.2)
-        val verticalMargin = Point3Double(x = 0.01, y = 0.01)
+      * @return true when corner intersection was found, otherwise false */
+    def handleVerticalCorners(movedPos: Point3Double, terrain: Array3[Block]): Boolean = {
+        var movedRightBound: Point3Double = rightBound(movedPos)
+        var movedLeftBound: Point3Double = leftBound(movedPos)
 
         val verticalSpeed: Double = (speed.x + speed.y) / 2
-
-        val touchingCornerUp: Boolean = {
-            verticalSpeed < 0 &&
-            collidesWithTerrain(terrain, movedPos - verticalMargin) && //entity collides when moved up slightly
-            (
-                //Left and right bound moved up and outward don't collide
-                !pointCollidesWithTerrain(movedLeftBound - verticalMargin - horizontalMargin, terrain) &&
-                !pointCollidesWithTerrain(movedRightBound - verticalMargin + horizontalMargin, terrain)
-            )
-        }
-
-        val touchingCornerDown: Boolean = {
-            verticalSpeed > 0 &&
-            collidesWithTerrain(terrain, movedPos + verticalMargin) && //entity collides when moved down slightly
-            (
-                //Left and right bound moved down and outward don't collide
-                !pointCollidesWithTerrain(movedLeftBound + verticalMargin - horizontalMargin, terrain) &&
-                !pointCollidesWithTerrain(movedRightBound + verticalMargin + horizontalMargin, terrain)
-            )
-        }
-
         val horizontalSpeed: Double = (speed.x - speed.y) / 2
-        if (touchingCornerUp) {
-            pos = pos + Point3Double(horizontalSpeed, -horizontalSpeed, 0)
-            return true
+
+        val horizontalMargin = Point3Double(x = 0.2, y = -0.2)
+        val verticalMargin = {
+            if(verticalSpeed < 0) Point3Double(x = -0.01, y = -0.01)
+            else if(verticalSpeed > 0) Point3Double(x = 0.01, y = 0.01)
+            else Point3Double(0)
         }
-        else if (touchingCornerDown) {
+
+        if(horizontalSpeed < 0){
+            movedRightBound = movedRightBound + horizontalMargin
+        }else if(horizontalSpeed > 0){
+            movedLeftBound = movedLeftBound - horizontalMargin
+        }
+
+        val touchingCorner: Boolean = {
+            verticalSpeed != 0 &&
+            collides(terrain, movedPos + verticalMargin) && //entity collides when moved up/down slightly
+            (
+                //Left and right bound moved up/down and outward don't collide
+                !pointWithHeightCollides(movedLeftBound + verticalMargin, terrain) &&
+                !pointWithHeightCollides(movedRightBound + verticalMargin, terrain)
+            )
+        }
+
+        if (touchingCorner) {
             pos = pos + Point3Double(horizontalSpeed, -horizontalSpeed, 0)
             return true
         }
@@ -137,17 +142,17 @@ abstract class Entity {
         var finalPos: Point3Double = movedPos
 
         //Check for vertical corners, if they were handled by the function nothing else needs to be done
-        if(handleVerticalCorner(movedPos, terrain)) return
+        if(handleVerticalCorners(movedPos, terrain)) return
 
-        val collisionNewPos: Boolean = collidesWithTerrain(terrain, movedPos)
+        val collisionNewPos: Boolean = collides(terrain, movedPos)
         //move position valid
         if(!collisionNewPos) {
             pos = movedPos
             return
         }
 
-        val collisionX: Boolean = collidesWithTerrain(terrain, pos.copy(x = movedPos.x, z = movedPos.z))
-        val collisionY: Boolean = collidesWithTerrain(terrain, pos.copy(y = movedPos.y, z = movedPos.z))
+        val collisionX: Boolean = collides(terrain, pos.copy(x = movedPos.x, z = movedPos.z))
+        val collisionY: Boolean = collides(terrain, pos.copy(y = movedPos.y, z = movedPos.z))
 
         val movedRightBound: Point3Double = rightBound(movedPos)
         val movedLeftBound: Point3Double = leftBound(movedPos)

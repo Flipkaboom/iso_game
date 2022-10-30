@@ -7,7 +7,7 @@ class Player(var pos: Point3Double) extends Entity {
     val name: String = "Player"
 
     //TODO: change sizes to have better tolerances
-    val width: Int = 16
+    val width: Int = 14
     val height: Int = 32
     var speed: Point3Double = Point3Double(0,0,0)
     val hasPhysics: Boolean = false
