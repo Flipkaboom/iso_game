@@ -16,14 +16,13 @@ abstract class Entity extends Serializable{
     val width: Int
     /** hitbox height */
     val height: Int
+    /** Used for when an entity shoudl be deleted on level end */
+    val endsWithLevel: Boolean = false
+
     var visible: Boolean = true
 
     var pos: Point3Double
     var speed: Point3Double
-
-    /** Used to easily delete entities at the and of a frame */
-    var deleted: Boolean = false
-    def delete(): Unit = deleted = true
 
     def texture: PImage = baseTexture
 
@@ -34,6 +33,8 @@ abstract class Entity extends Serializable{
     def onWallCollision(): Unit = {}
 
     def onLevelStart(): Unit = {}
+
+    def onLevelEnd(): Unit = {}
 
     final def update(): Unit = {
         move(speed)

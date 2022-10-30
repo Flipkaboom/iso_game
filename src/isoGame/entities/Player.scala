@@ -1,7 +1,8 @@
 package isoGame.entities
 import isoGame.blocks.Block
 import isoGame.entities.Player.jumpStrength
-import isoGame.{Array3, GameState, Point3Double}
+import isoGame.{Array3, GameState, Point3Double, Renderer}
+import processing.core.PImage
 
 class Player(var pos: Point3Double) extends Entity {
     val name: String = "Player"
@@ -10,16 +11,30 @@ class Player(var pos: Point3Double) extends Entity {
     /** hitbox width */
     val width: Int = 14
     /** hitbox height */
-    val height: Int = 31
+    val height: Int = 30
     var speed: Point3Double = Point3Double(0,0,0)
 
-    var hat: PlayerHat = new PlayerHat(pos + Point3Double(z = heightBlockScale / 1.8))
+    override val endsWithLevel: Boolean = true
+
+    @transient lazy val headlessTexture: PImage = Renderer.textures("headlessPlayer")
+    override def texture: PImage = {
+        if(hat.visible) headlessTexture
+        else baseTexture
+    }
+
+    var hat: PlayerHat = new PlayerHat(pos + Point3Double(-0.05, 0.05, heightBlockScale / 2.3))
 
     override def onLevelStart(): Unit = GameState.spawnEntity(hat)
 
     override def move(dif: Point3Double): Unit = {
         super.move(dif)
-        hat.pos = pos + Point3Double(z = heightBlockScale / 1.8)
+        hat.pos = pos + Point3Double(-0.05, 0.05, heightBlockScale / 2.3)
+    }
+
+    override def frameActions(): Unit = {
+        val pDown = (pos - Point3Double(z = 1)).toPoint3
+        if(onGround()) GameState.terrain(pDown).steppedOn(pDown, this)
+        GameState.terrain(pos.toPoint3).playerInside(pos.toPoint3, this)
     }
 
     def jump(): Unit = {
@@ -49,6 +64,7 @@ class Player(var pos: Point3Double) extends Entity {
     def unWear(): Unit = {
         if(!onGround()) return
         if(collides(pos + Point3Double(z = 1))) return
+        if(GameState.terrain(pos.toPoint3).name != "Air") return
         GameState.terrain(pos.toPoint3) = hat.block
         hat.visible = false
         pos = pos + Point3Double(z = 1)

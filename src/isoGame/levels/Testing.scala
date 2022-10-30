@@ -9,7 +9,7 @@ class Testing extends Level {
     var name: String = "Testing"
     val chunkSize: Point3 = Point3(16, 16, 32)
     val loadFromFile: Boolean = false
-    val playerSpawn: Point3Double = Point3Double(1,1,16)
+    override val playerSpawn: Point3Double = Point3Double(1,1,16)
 
     def buildLevel(): Unit = {
         terrain.fillRect(Point3(0), Point3(15, 15, 9), blocks.Dirt)

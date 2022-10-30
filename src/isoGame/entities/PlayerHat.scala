@@ -14,7 +14,9 @@ class PlayerHat(var pos: Point3Double) extends Entity {
     val height: Int = 0
     var speed: Point3Double = Point3Double(0)
 
-    visible = true
+    override val endsWithLevel: Boolean = true
+
+    visible = false
 
     var block: Block =  Block.blockByName("PickUpBlock")
 

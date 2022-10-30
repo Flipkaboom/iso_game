@@ -38,9 +38,11 @@ class EditorPlayer()
         currBlockIndex = Block.blockList.indexOf(blockUnderCursor.name)
     }
 
-    def printCurrCoords(): Unit = {
+    /** Print the code needed to manually place the current block at the current position
+      * Can be used in buildLevel method in Level class */
+    def printManualPlacementCode(): Unit = {
         val p = pos.toPoint3
-        println("Position -> x: " + p.x + ", y:" + p.y + ", z:" + p.z)
+        println("terrain(Point3("+ p.x + "," + p.y + "," + p.z + ")) = new " + currBlock + "()")
     }
 
     def toggleFill(): Unit = {

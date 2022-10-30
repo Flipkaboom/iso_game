@@ -6,22 +6,78 @@ import GameState._
 import isoGame.levels.Level
 
 import java.io.{FileInputStream, FileOutputStream, ObjectInputStream, ObjectOutputStream}
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 class GameState(){
     var player: Player = null
-    var level: Level = null
-    
+    var levelName: String = ""
+
+    var savedLevels: mutable.Set[String] = mutable.Set()
+
+    def checkTransport(): Unit = {
+        if(!activateTransport) return
+
+        val newEntityArray: ArrayBuffer[Entity] = ArrayBuffer()
+        //level end method and removing unwanted entities
+        for(e <- entityArray) {
+            e.onLevelEnd()
+            if(!e.endsWithLevel) newEntityArray.append(e)
+        }
+        entityArray = newEntityArray
+
+        saveState()
+
+        loadLevel(transportDest)
+    }
+
     def loadLevel(name: String): Unit = {
-        level = Level.byName(name)
-        level.initialize()
-        terrain = level.terrain
-        entityArray = level.entityArray
-        chunkSize = level.chunkSize
-        if(player == null) {
-            if(IsoGame.editorMode) player = new EditorPlayer()
-            else player = new Player(level.playerSpawn)
-            level.spawnEntity(player)
+        levelName = name
+        if(savedLevels.contains(name)){
+            loadState()
+            spawnEntity(player)
+        }
+        else {
+            val level = Level.byName(name)
+            level.initialize()
+            levelName = level.name
+            terrain = level.terrain
+            entityArray = level.entityArray
+            chunkSize = level.chunkSize
+            if (player == null) {
+                if (IsoGame.editorMode) player = new EditorPlayer()
+                else player = new Player(level.playerSpawn)
+                level.spawnEntity(player)
+            }else{
+                spawnEntity(player)
+            }
+        }
+
+        //Search for transporter with matching signature
+        for (x <- 0 until GameState.chunkSize.x) {
+            for (y <- 0 until GameState.chunkSize.y) {
+                for (z <- 0 until GameState.chunkSize.z) {
+                    terrain(x, y, z) match {
+                        case b: blocks.Transporter =>
+                            //Move to center of block if matching signature
+                            if(b.signature == transportSignature) {
+                                print("Signature found!")
+                                b.framesToActivation = 10
+                                player.pos = Point3Double(x + 0.5, y + 0.5, z)
+                                println(player.pos.x + "," + player.pos.y + "," + player.pos.z)
+                            }
+                        case _ =>
+                    }
+                }
+            }
+        }
+        activateTransport = false
+        levelStart()
+    }
+
+    def levelStart(): Unit = {
+        for (e <- GameState.entityArray) {
+            e.onLevelStart()
         }
     }
     
@@ -43,27 +99,31 @@ class GameState(){
     }
 
     def saveState(): Unit = {
-        val oosChunk = new ObjectOutputStream(new FileOutputStream("./levels/current.chunk"))
+        savedLevels.addOne(levelName)
+        val oosChunk = new ObjectOutputStream(new FileOutputStream("./saves/" + levelName + ".chunk"))
         oosChunk.writeObject(terrain)
         oosChunk.close()
-        val oosEnt = new ObjectOutputStream(new FileOutputStream("./levels/current.entities"))
+        val oosEnt = new ObjectOutputStream(new FileOutputStream("./saves/" + levelName + ".entities"))
         oosEnt.writeObject(entityArray)
         oosEnt.close()
     }
 
     def loadState(): Unit = {
-        val oisChunk = new ObjectInputStream(new FileInputStream("./levels/current.chunk"))
+        val oisChunk = new ObjectInputStream(new FileInputStream("./saves/" + levelName + ".chunk"))
         terrain = oisChunk.readObject.asInstanceOf[Array3[Block]]
+        chunkSize = Point3(terrain.data.length, terrain.data(0).length, terrain.data(0)(0).length)
         oisChunk.close()
-        val oisEnt = new ObjectInputStream(new FileInputStream("./levels/current.entities"))
+        val oisEnt = new ObjectInputStream(new FileInputStream("./saves/" + levelName + ".entities"))
         entityArray = oisEnt.readObject.asInstanceOf[ArrayBuffer[Entity]]
         oisEnt.close()
-        player = entityArray.filter{
-            case p: Player => true
-            case _ => false}
-            .map{
-            case p: Player => p
-        }(0)
+    }
+
+    /** Saves only terrain to levels folder for use in level editor */
+    def saveTerrain(): Unit = {
+        val oosChunk = new ObjectOutputStream(new FileOutputStream("./levels/" + levelName + ".level"))
+        oosChunk.writeObject(terrain)
+        println("Saved to ./levels/" + levelName + ".level")
+        oosChunk.close()
     }
 }
 
@@ -74,5 +134,14 @@ object GameState {
 
     def spawnEntity(e: Entity): Unit = {
         entityArray.append(e)
+    }
+
+    var activateTransport: Boolean = false
+    var transportDest: String = ""
+    var transportSignature: Char = ' '
+    def transport(destination: String, signature: Char): Unit = {
+        activateTransport = true
+        transportDest = destination
+        transportSignature = signature
     }
 }

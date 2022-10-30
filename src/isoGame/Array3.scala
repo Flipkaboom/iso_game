@@ -49,7 +49,7 @@ class Array3[T](
 object Array3{
     def apply[T](size: Point3, initialVal: T): Array3[T] = {
         val newData = ArrayBuffer[ArrayBuffer[ArrayBuffer[T]]]()
-        for(x <- 0 until size.x){
+        for(x <- 0 until  size.x){
             newData.append(ArrayBuffer[ArrayBuffer[T]]())
             for(y <- 0 until size.y){
                 newData(x).append(ArrayBuffer[T]())

@@ -15,7 +15,7 @@ abstract class Level {
     var terrain: Array3[Block] = Array3[Block]()
     var entityArray: ArrayBuffer[Entity] = ArrayBuffer()
 
-    val playerSpawn: Point3Double
+    val playerSpawn: Point3Double = Point3Double(0)
 
     def initialize(): Unit = {
         if(loadFromFile) loadTerrain()
@@ -27,13 +27,6 @@ abstract class Level {
 
     def spawnEntity(e: Entity): Unit = {
         entityArray.append(e)
-    }
-
-    def saveTerrain(): Unit = {
-        val oosChunk = new ObjectOutputStream(new FileOutputStream("./levels/" + name + ".level"))
-        oosChunk.writeObject(terrain)
-        println("Saved to ./levels/" + name + ".level")
-        oosChunk.close()
     }
 
     def loadTerrain(): Unit = {
@@ -53,6 +46,9 @@ object Level{
             case "FirstRoom" => new FirstRoom
             case "Blinker1" => new Blinker1
             case "PickUpBox1" => new PickUpBox1
+            case "Wires1" => new Wires1
+            case "MultiBox" => new MultiBox
+            case "SimpleDoor" => new SimpleDoor
         }
     }
 }
