@@ -13,6 +13,13 @@ import scala.collection.mutable.ArrayBuffer
 class Renderer extends BaseEngine{
     var renderingScale: Float = 1
 
+    //TODO: don't need x and y just make it have a width or radius maybe??
+    val terrainWidth: Float = (GameLogic.chunkSize.x max GameLogic.chunkSize.y) * Block.width
+    val terrainHeight: Float = {
+        ((GameLogic.chunkSize.x max GameLogic.chunkSize.y) * (Block.height / 2)) +
+            GameLogic.chunkSize.z * (Block.height / 2)
+    }
+
     override def settings(): Unit = {
         size(1280, 720)
         noSmooth()
@@ -21,7 +28,7 @@ class Renderer extends BaseEngine{
     override def setup(): Unit = {
         surface.setTitle("Iso")
         surface.setResizable(true)
-//        frameRate(15)
+        frameRate(60)
 
         loadTextures()
     }
@@ -42,22 +49,12 @@ class Renderer extends BaseEngine{
     def drawFrame(state: GameState): Unit = {
         updateRenderingScale()
 
-        fill(255, 255, 255)
-        rect(0, 0, width, height)
+        background(77, 93, 114)
 
-        drawWorld(state.terrain, state.entityArray)
-
-//        for(e <- state.entityArray){
-//            drawEntity(e)
-//        }
+        drawWorld(GameState.terrain, state.entityArray)
     }
 
     def updateRenderingScale(): Unit = {
-        val terrainWidth: Float = (GameLogic.chunkSize.x max GameLogic.chunkSize.y) * Block.width
-        val terrainHeight: Float = {
-            ((GameLogic.chunkSize.x max GameLogic.chunkSize.y) * Block.height / 2) +
-                GameLogic.chunkSize.z * Block.height / 2
-        }
         val scaleHor: Float = width / terrainWidth
         val scaleVert: Float = height / terrainHeight
         val scale = scaleHor min scaleVert
@@ -87,7 +84,11 @@ class Renderer extends BaseEngine{
         var y: Int = (p.y * renderingScale).toInt
 
         x += width / 2
-        y += height / 2
+
+        //center vertically
+        val terrainSideHeight = ((GameLogic.chunkSize.z * (Block.height / 2)).toFloat * renderingScale).toInt
+        y += terrainSideHeight
+        y += ((height - (terrainHeight * renderingScale)) / 2).toInt
 
         val drawWidth = (img.width * renderingScale).toInt
         val drawHeight = (img.height * renderingScale).toInt
@@ -108,7 +109,7 @@ class Renderer extends BaseEngine{
         if(!blockUp.visible || blockUp.transparent) return true
         val blockLeft = terrain(p + Point3(0, 1, 0))
         if (!blockLeft.visible || blockLeft.transparent) return true
-        val blockRight = terrain(p + Point3(1, 0, 1))
+        val blockRight = terrain(p + Point3(1, 0, 0))
         if (!blockRight.visible || blockRight.transparent) return true
         false
     }

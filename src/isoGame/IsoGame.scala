@@ -17,7 +17,14 @@ class IsoGame extends Renderer{
         (VK_A, "LEFT"),
         (VK_S, "DOWN"),
         (VK_D, "RIGHT"),
-        (VK_SPACE, "JUMP")
+        (VK_SPACE, "JUMP"),
+        (VK_E, "INTERACT"),
+        (VK_F, "FILL"),
+        (VK_LEFT, "ARROWLEFT"),
+        (VK_RIGHT, "ARROWRIGHT"),
+        (VK_SHIFT, "SHIFT"),
+        (VK_ENTER, "SAVE"),
+        (VK_BACK_SPACE, "LOAD")
     )
 
     override def draw(): Unit = {

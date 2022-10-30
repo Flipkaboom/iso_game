@@ -1,23 +1,30 @@
 package isoGame.entities
 import isoGame.blocks.Block
+import isoGame.entities.Player.jumpStrength
 import isoGame.{Array3, Point3Double}
 
-//TODO: immutable?
 class Player(var pos: Point3Double) extends Entity {
     val name: String = "Player"
-
-    //TODO: change sizes to have better tolerances
+    val hasPhysics: Boolean = true
+    val hasCollision: Boolean = true
+    /** hitbox width */
     val width: Int = 14
-    val height: Int = 32
+    /** hitbox height */
+    val height: Int = 31
     var speed: Point3Double = Point3Double(0,0,0)
-    val hasPhysics: Boolean = false
 
-    override def frameActions(terrain: Array3[Block]): Unit = {
-
+    def jump(): Unit = {
+        if(onGround()) speed = speed.copy(z = jumpStrength)
     }
 
+    def shift(): Unit = {}
+
+    def interact(): Unit = {
+
+    }
 }
 
 object Player{
     val walkingSpeed = 0.05
+    val jumpStrength = 0.2
 }

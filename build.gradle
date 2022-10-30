@@ -35,6 +35,11 @@ dependencies {
     testImplementation "org.scalatest:scalatest_${scalaMajorVersion}:3.0.8"
 }
 
+task levelEditor(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass.set('isoGame.IsoEditor')
+}
+
 
 task zip(type: Zip) {
     group = "prepareZipForSubmit"

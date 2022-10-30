@@ -1,6 +1,6 @@
 package isoGame
 
-import isoGame.entities.Player
+import isoGame.entities.{EditorPlayer, Player}
 
 import scala.collection.mutable
 
@@ -30,8 +30,10 @@ import scala.collection.mutable
 class GameLogic(){
     val state: GameState = new GameState
 
+    //TODO: disable when editing
     def updateGame(): Unit = {
         state.updateEntities()
+        state.updateBlocks()
     }
 
     def keyPressed(key: String): Unit = {
@@ -40,7 +42,22 @@ class GameLogic(){
             case "LEFT" => state.player.accelerate(Point3Double(-Player.walkingSpeed, Player.walkingSpeed, 0))
             case "DOWN" => state.player.accelerate(Point3Double(1*Player.walkingSpeed, 1*Player.walkingSpeed, 0))
             case "RIGHT" => state.player.accelerate(Point3Double(Player.walkingSpeed, -Player.walkingSpeed, 0))
-            case "JUMP" => state.player.speed = state.player.speed.copy(z = 0.8)
+            case "JUMP" => state.player.jump()
+            case "INTERACT" => state.player.interact()
+            case "SAVE" => state.saveChunkToFile()
+            case "LOAD" => state.loadChunkFromFile()
+            case _ =>
+        }
+        //Controls for editing
+        state.player match {
+            case p: EditorPlayer =>
+                key match {
+                    case "SHIFT" => p.shift()
+                    case "ARROWLEFT" => p.prevBlock()
+                    case "ARROWRIGHT" => p.nextBlock()
+                    case "FILL" => p.toggleFill()
+                    case _ =>
+            }
             case _ =>
         }
     }
@@ -51,7 +68,6 @@ class GameLogic(){
             case "LEFT" => state.player.accelerate(Point3Double(Player.walkingSpeed, -Player.walkingSpeed, 0))
             case "DOWN" => state.player.accelerate(Point3Double(-1*Player.walkingSpeed, -1*Player.walkingSpeed, 0))
             case "RIGHT" => state.player.accelerate(Point3Double(-Player.walkingSpeed, Player.walkingSpeed, 0))
-            case "JUMP" =>
             case _ =>
         }
     }
@@ -59,5 +75,5 @@ class GameLogic(){
 }
 
 object GameLogic{
-    val chunkSize: Point3 = Point3(16, 16, 16)
+    val chunkSize: Point3 = Point3(16, 16, 32)
 }

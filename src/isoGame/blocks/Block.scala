@@ -1,23 +1,44 @@
 package isoGame.blocks
 
-import isoGame.Renderer
+import isoGame.{Point3, Renderer}
 import processing.core.PImage
 
-abstract class Block {
-    val name: String
-    val collision: Boolean
-    //TODO: remove if in the end all blocks are drawn anyway
-    val transparent: Boolean
-    val visible: Boolean
+import scala.collection.mutable.ArrayBuffer
 
-    lazy val texture: PImage = Renderer.textures(name)
+abstract class Block extends Serializable{
+    val name: String
+    var collision: Boolean
+    var transparent: Boolean
+    var visible: Boolean
+
+    def update(p: Point3): Unit = {}
+
+    def texture: PImage = baseTexture
+
+    @transient lazy val baseTexture: PImage = Renderer.textures(name)
 }
 
 object Block {
     val width = 16
     val height = 16
-}
 
-//TODO: Put blocks in here?
-//TODO: Trait for types of blocks? (Functional, multi, visible/invisible)
-//TODO: Object somwhere with "global" info like texture list
+    def blockByName(name: String): Block = {
+        name match {
+            case "Air" => Air
+            case "Dirt" => Dirt
+            case "Grass" => Grass
+            case "Stone" => Stone
+            case "BlueBlinker" => new BlueBlinker
+            case "RedBlinker" => new RedBlinker
+        }
+    }
+
+    val blockList: ArrayBuffer[String] = ArrayBuffer(
+        "Air",
+        "Dirt",
+        "Grass",
+        "Stone",
+        "BlueBlinker",
+        "RedBlinker"
+    )
+}
