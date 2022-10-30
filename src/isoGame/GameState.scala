@@ -1,48 +1,38 @@
 package isoGame
 
 import isoGame.blocks.Block
-import isoGame.entities.{Entity, Player}
+import isoGame.entities.{EditorPlayer, Entity, Player}
 import GameState._
+import isoGame.levels.Level
 
-import java.io.{File, FileInputStream, FileOutputStream, ObjectInputStream, ObjectOutputStream}
+import java.io.{FileInputStream, FileOutputStream, ObjectInputStream, ObjectOutputStream}
 import scala.collection.mutable.ArrayBuffer
 
 class GameState(){
-    var entityArray: ArrayBuffer[Entity] = ArrayBuffer()
-    var player: Player = new Player(Point3Double(10, 8, 11))
-
-    terrain.fillRect(Point3(0), Point3(15, 15, 9), blocks.Dirt)
-    terrain.fillRect(Point3(0), Point3(15, 15, 5), blocks.Stone)
-    terrain.fillRect(Point3(0, 0, 10), Point3(15, 15, 10), blocks.Grass)
-
-    terrain.fillRect(Point3(0, 0, 0), Point3(1, 5, 15), blocks.Stone)
-    terrain.fillRect(Point3(0, 0, 15), Point3(4, 1, 15), blocks.Grass)
-    terrain.fillRect(Point3(7, 0, 15), Point3(8, 1, 15), "BlueBlinker", Block.blockByName)
-    terrain.fillRect(Point3(11, 0, 15), Point3(12, 1, 15), "RedBlinker", Block.blockByName)
-
-    terrain(Point3(0,0,10)) = blocks.Stone
-    terrain(Point3(0,15,10)) = blocks.Stone
-    terrain(Point3(15,0,10)) = blocks.Stone
-    terrain(Point3(15,15,10)) = blocks.Stone
-    terrain.fillRect(Point3(3,12,11), Point3(8,8,13), blocks.Dirt)
-    terrain.fillRect(Point3(3, 3, 10), Point3(6, 3, 10), blocks.Stone)
-    terrain.fillRect(Point3(3, 3, 12), Point3(6, 3, 12), blocks.Stone)
-
-    spawnEntity(player)
-    spawnEntity(new entities.Frog(Point3Double(12, 11.5, 15), Point3Double(x = 0.05)))
-
+    var player: Player = null
+    var level: Level = null
+    
+    def loadLevel(name: String): Unit = {
+        level = Level.byName(name)
+        level.initialize()
+        terrain = level.terrain
+        entityArray = level.entityArray
+        chunkSize = level.chunkSize
+        if(player == null) {
+            if(IsoGame.editorMode) player = new EditorPlayer()
+            else player = new Player(level.playerSpawn)
+            level.spawnEntity(player)
+        }
+    }
+    
     def updateBlocks(): Unit = {
-        for(x <- 0 until GameLogic.chunkSize.x){
-            for(y <- 0 until GameLogic.chunkSize.y){
-                for(z <- 0 until GameLogic.chunkSize.z){
+        for(x <- 0 until GameState.chunkSize.x){
+            for(y <- 0 until GameState.chunkSize.y){
+                for(z <- 0 until GameState.chunkSize.z){
                     terrain(x, y, z).update(Point3(x, y, z))
                 }
             }
         }
-    }
-
-    def spawnEntity(e: Entity): Unit = {
-        entityArray.append(e)
     }
 
     def updateEntities(): Unit = {
@@ -52,7 +42,7 @@ class GameState(){
         entityArray.sortWith(_.pos.diagonalRow > _.pos.diagonalRow)
     }
 
-    def saveChunkToFile(): Unit = {
+    def saveState(): Unit = {
         val oosChunk = new ObjectOutputStream(new FileOutputStream("./levels/current.chunk"))
         oosChunk.writeObject(terrain)
         oosChunk.close()
@@ -61,7 +51,7 @@ class GameState(){
         oosEnt.close()
     }
 
-    def loadChunkFromFile(): Unit = {
+    def loadState(): Unit = {
         val oisChunk = new ObjectInputStream(new FileInputStream("./levels/current.chunk"))
         terrain = oisChunk.readObject.asInstanceOf[Array3[Block]]
         oisChunk.close()
@@ -78,5 +68,11 @@ class GameState(){
 }
 
 object GameState {
-    var terrain = Array3[Block](GameLogic.chunkSize, blocks.Air)
+    var chunkSize: Point3 = Point3(16, 16, 32)
+    var terrain: Array3[Block] = Array3[Block](GameState.chunkSize, blocks.Air)
+    var entityArray: ArrayBuffer[Entity] = ArrayBuffer()
+
+    def spawnEntity(e: Entity): Unit = {
+        entityArray.append(e)
+    }
 }

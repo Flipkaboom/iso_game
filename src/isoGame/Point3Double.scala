@@ -25,6 +25,10 @@ case class Point3Double(x: Double = 0, y: Double = 0, z: Double = 0){
         Point3Double(f(x, other.x), f(y, other.y), f(z, other.z))
     }
 
+    def map(f: Double => Double): Point3Double = {
+        Point3Double(f(x), f(y), f(z))
+    }
+
     def diagonalRow: Double = {
         x + y
     }

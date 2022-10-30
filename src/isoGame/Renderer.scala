@@ -1,5 +1,6 @@
 package isoGame
 
+import isoGame.GameState
 import isoGame.Renderer.textures
 import isoGame.blocks.Block
 import isoGame.entities.Entity
@@ -14,10 +15,10 @@ class Renderer extends BaseEngine{
     var renderingScale: Float = 1
 
     //TODO: don't need x and y just make it have a width or radius maybe??
-    val terrainWidth: Float = (GameLogic.chunkSize.x max GameLogic.chunkSize.y) * Block.width
-    val terrainHeight: Float = {
-        ((GameLogic.chunkSize.x max GameLogic.chunkSize.y) * (Block.height / 2)) +
-            GameLogic.chunkSize.z * (Block.height / 2)
+    def terrainWidth: Float = (GameState.chunkSize.x max GameState.chunkSize.y) * Block.width
+    def terrainHeight: Float = {
+        ((GameState.chunkSize.x max GameState.chunkSize.y) * (Block.height / 2)) +
+            GameState.chunkSize.z * (Block.height / 2)
     }
 
     override def settings(): Unit = {
@@ -51,7 +52,7 @@ class Renderer extends BaseEngine{
 
         background(77, 93, 114)
 
-        drawWorld(GameState.terrain, state.entityArray)
+        drawWorld(GameState.terrain, GameState.entityArray)
     }
 
     def updateRenderingScale(): Unit = {
@@ -86,7 +87,7 @@ class Renderer extends BaseEngine{
         x += width / 2
 
         //center vertically
-        val terrainSideHeight = ((GameLogic.chunkSize.z * (Block.height / 2)).toFloat * renderingScale).toInt
+        val terrainSideHeight = ((GameState.chunkSize.z * (Block.height / 2)).toFloat * renderingScale).toInt
         y += terrainSideHeight
         y += ((height - (terrainHeight * renderingScale)) / 2).toInt
 
@@ -105,6 +106,9 @@ class Renderer extends BaseEngine{
 
     def blockVisible(p: Point3, terrain: Array3[Block]): Boolean = {
         if(!terrain(p).visible) return false
+        //Point borders chunk edge
+        val chunkMax = GameState.chunkSize - Point3(1)
+        if(p.x == chunkMax.x || p.y == chunkMax.y || p.z == chunkMax.z) return true
         val blockUp = terrain(p + Point3(0,0,1))
         if(!blockUp.visible || blockUp.transparent) return true
         val blockLeft = terrain(p + Point3(0, 1, 0))
@@ -115,8 +119,8 @@ class Renderer extends BaseEngine{
     }
 
     def drawWorld(terrain: Array3[Block], entityArray: ArrayBuffer[Entity]): Unit = {
-        for (diagRow <- 0 until GameLogic.chunkSize.x){
-            for(z <- 0 until GameLogic.chunkSize.z){
+        for (diagRow <- 0 until GameState.chunkSize.x){
+            for(z <- 0 until GameState.chunkSize.z){
                 for(e <- entityArray){
                     if((e.pos.diagonalRow).toInt == diagRow && e.pos.z.toInt == z){
                         drawEntity(e)
@@ -129,29 +133,23 @@ class Renderer extends BaseEngine{
             }
         }
 
-        for (diagRow <- GameLogic.chunkSize.x to 0 by -1){
-            for (z <- 0 until GameLogic.chunkSize.z){
+        for (diagRow <- GameState.chunkSize.x to 0 by -1){
+            for (z <- 0 until GameState.chunkSize.z){
                 for (e <- entityArray) {
-                    if (31 - (e.pos.diagonalRow).toInt == diagRow && e.pos.z.toInt == z) {
+                    if (((GameState.chunkSize.x * 2) - 1) - (e.pos.diagonalRow).toInt == diagRow && e.pos.z.toInt == z) {
                         drawEntity(e)
                     }
                 }
                 for (i <- 0 until diagRow){
-                    val p: Point3 = Point3(GameLogic.chunkSize.x - (diagRow - i), (GameLogic.chunkSize.x - 1) - i, z)
+                    val p: Point3 = Point3(GameState.chunkSize.x - (diagRow - i), (GameState.chunkSize.x - 1) - i, z)
                     if (blockVisible(p, terrain)) drawBlock(terrain(p), p)
                 }
             }
         }
     }
 
-//    def sortEntitiesByRow(entityArray: ArrayBuffer[Entity]): ArrayBuffer[ArrayBuffer[Entity]] = {
-//        val result: ArrayBuffer[ArrayBuffer[Entity]] = ArrayBuffer()
-//        for(e <- entityArray){
-//            e.pos.toPoint3.diagonalRow
-//        }
-//    }
-
     def drawEntity(e: Entity): Unit = {
+        if(!e.visible) return
         val screenPos = screenPosFromCoords(e.pos)
         val topLeftPos = screenPos - PointDouble(0, e.texture.height - (Block.height / 2))
         drawTexture(e.texture, topLeftPos)

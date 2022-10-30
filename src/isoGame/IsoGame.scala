@@ -20,6 +20,8 @@ class IsoGame extends Renderer{
         (VK_SPACE, "JUMP"),
         (VK_E, "INTERACT"),
         (VK_F, "FILL"),
+        (VK_I, "COLORPICK"),
+        (VK_P, "PRINT"),
         (VK_LEFT, "ARROWLEFT"),
         (VK_RIGHT, "ARROWRIGHT"),
         (VK_SHIFT, "SHIFT"),
@@ -50,7 +52,13 @@ class IsoGame extends Renderer{
 }
 
 object IsoGame{
+    var startingLevel: String = "New"
+    var newLevelName: String = "New"
+    var editorMode: Boolean = false
+    var editorSize: Point3 = Point3(16, 16, 32)
+
     def main(args: Array[String]): Unit = {
+        startingLevel = args(0)
         PApplet.main("isoGame.IsoGame")
     }
 }

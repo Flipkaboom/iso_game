@@ -16,15 +16,24 @@ abstract class Entity extends Serializable{
     val width: Int
     /** hitbox height */
     val height: Int
+    var visible: Boolean = true
 
     var pos: Point3Double
     var speed: Point3Double
 
-    @transient lazy val texture: PImage = Renderer.textures(name)
+    /** Used to easily delete entities at the and of a frame */
+    var deleted: Boolean = false
+    def delete(): Unit = deleted = true
+
+    def texture: PImage = baseTexture
+
+    @transient lazy val baseTexture: PImage = Renderer.textures(name)
 
     def frameActions(): Unit = {}
 
     def onWallCollision(): Unit = {}
+
+    def onLevelStart(): Unit = {}
 
     final def update(): Unit = {
         move(speed)
@@ -43,7 +52,7 @@ abstract class Entity extends Serializable{
     }
 
     def onGround(): Boolean = {
-        pos.z % 1 < 0.001 && collides(pos - Point3Double(z = 1))
+        pos.z % 1 < 0.0001 && collides(pos - Point3Double(z = 1))
     }
 
     /** @return width of the entity converted to block units (1 block length = 1 unit) */
@@ -59,9 +68,9 @@ abstract class Entity extends Serializable{
     /** Checks if given point collides with the terrain */
     def pointCollides(p: Point3Double): Boolean = {
         p.x < 0 || p.y < 0 || p.z < 0 ||
-        p.x >= GameLogic.chunkSize.x ||
-        p.y >= GameLogic.chunkSize.y ||
-        p.z >= GameLogic.chunkSize.z ||
+        p.x >= GameState.chunkSize.x ||
+        p.y >= GameState.chunkSize.y ||
+        p.z >= GameState.chunkSize.z ||
         (GameState.terrain(p.toPoint3).collision && hasCollision)
     }
 

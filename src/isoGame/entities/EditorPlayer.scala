@@ -4,19 +4,23 @@ import isoGame.blocks.Block
 import isoGame.{GameLogic, GameState, Point3, Point3Double, blocks}
 
 class EditorPlayer()
-    //Initialize at half of each chunk size
-    extends Player(Point3Double(0, 0, 14.8))
+    extends Player(Point3Double(0.99, 0.99, 0))
 {
     override val name = "EditorPlayer"
     override val hasPhysics = false
     override val hasCollision = false
-    override val width: Int = 0
-    override val height: Int = 0
+    override val width: Int = 16
+    override val height: Int = 16
 
     var currBlockIndex: Int = 0
     var fillActive: Boolean = false
     var fillStartSet: Boolean = false
     var fillStart: Point3 = Point3(0, 0, 0)
+
+    override def move(dif: Point3Double): Unit = {
+        val newPos = pos + dif
+        if(!pointCollides(newPos)) pos = newPos
+    }
 
     def currBlock: String = Block.blockList(currBlockIndex)
 
@@ -27,6 +31,16 @@ class EditorPlayer()
     def prevBlock(): Unit = {
         currBlockIndex = Math.floorMod(currBlockIndex - 1, Block.blockList.length)
         println(currBlock)
+    }
+
+    def colorpick(): Unit = {
+        val blockUnderCursor = GameState.terrain(pos.toPoint3)
+        currBlockIndex = Block.blockList.indexOf(blockUnderCursor.name)
+    }
+
+    def printCurrCoords(): Unit = {
+        val p = pos.toPoint3
+        println("Position -> x: " + p.x + ", y:" + p.y + ", z:" + p.z)
     }
 
     def toggleFill(): Unit = {
@@ -42,15 +56,15 @@ class EditorPlayer()
     override def jump(): Unit = {
         if(fillActive){
             if(!fillStartSet) {
-                fillStart = pos.toPoint3 + Point3(z = 1)
+                fillStart = pos.toPoint3
                 fillStartSet = true
             }
             else {
-                GameState.terrain.fillRect(fillStart, pos.toPoint3 + Point3(z = 1), currBlock, Block.blockByName)
+                GameState.terrain.fillRect(fillStart, pos.toPoint3, currBlock, Block.blockByName)
                 fillStartSet = false
             }
         }
-        else GameState.terrain(pos.toPoint3 + Point3(z = 1)) = Block.blockByName(currBlock)
+        else GameState.terrain(pos.toPoint3) = Block.blockByName(currBlock)
     }
 
     override def shift(): Unit = {

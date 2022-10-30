@@ -1,18 +1,25 @@
 package isoGame
 
-import isoGame.entities.{EditorPlayer, Player}
 import processing.core.PApplet
 
-import scala.collection.mutable.ArrayBuffer
-
 class IsoEditor extends IsoGame {
-    gameInstance.state.player = new EditorPlayer
-    gameInstance.state.entityArray = ArrayBuffer()
-    gameInstance.state.spawnEntity(gameInstance.state.player)
+
 }
 
 object IsoEditor{
     def main(args: Array[String]): Unit = {
+        if(args.length == 4) {
+            IsoGame.editorSize = Point3(args(1).toInt, args(2).toInt, args(3).toInt)
+            IsoGame.newLevelName = args(0)
+        }
+        else if(args.length == 1) {
+            IsoGame.startingLevel = args(0)
+        }
+
+        IsoGame.editorMode = true
+
+        println("Editing level: " + IsoGame.newLevelName)
+
         PApplet.main("isoGame.IsoEditor")
     }
 }

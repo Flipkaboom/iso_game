@@ -1,5 +1,6 @@
 package isoGame.blocks
 
+import isoGame.entities.Player
 import isoGame.{Point3, Renderer}
 import processing.core.PImage
 
@@ -12,6 +13,8 @@ abstract class Block extends Serializable{
     var visible: Boolean
 
     def update(p: Point3): Unit = {}
+
+    def interact(p: Point3, player: Player): Unit = {}
 
     def texture: PImage = baseTexture
 
@@ -30,6 +33,11 @@ object Block {
             case "Stone" => Stone
             case "BlueBlinker" => new BlueBlinker
             case "RedBlinker" => new RedBlinker
+            case "Vines" => Vines
+            case "Pumpkin" => Pumpkin
+            case "CarvedPumpkin" => CarvedPumpkin
+            case "Pedestal" => Pedestal
+            case "PickUpBlock" => new PickUpBlock
         }
     }
 
@@ -39,6 +47,11 @@ object Block {
         "Grass",
         "Stone",
         "BlueBlinker",
-        "RedBlinker"
+        "RedBlinker",
+        "Vines",
+        "Pumpkin",
+        "CarvedPumpkin",
+        "Pedestal",
+        "PickUpBlock"
     )
 }
